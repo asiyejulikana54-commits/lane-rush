@@ -1,4 +1,4 @@
-const VERSION = 12;
+const VERSION = 13;
 const $ = (id)=>document.getElementById(id);
 const screens=["home","gameScreen","result","panel"];
 const show=(id)=>{screens.forEach(s=>$(s).classList.toggle("active",s===id));};
@@ -61,7 +61,7 @@ function update(dt){
  state.shield=Math.max(0,state.shield-dt);state.magnet=Math.max(0,state.magnet-dt);state.slow=Math.max(0,state.slow-dt);state.shake=Math.max(0,state.shake-dt*4);
  state.x += (state.targetX-state.x)*Math.min(1,dt*16);
  state.spawn-=dt;state.coinSpawn-=dt;state.powerSpawn-=dt;
- const difficulty=Math.max(.42,1.0-state.score/4500);
+ const tier=state.score<500?0:state.score<1400?1:state.score<2800?2:3;const difficulty=Math.max(.46,1.0-state.score/5200);
  if(state.spawn<=0){spawnObstacle();state.spawn=difficulty*(.72+Math.random()*.38)}
  if(state.coinSpawn<=0){spawnCoin();state.coinSpawn=1.15+Math.random()*1.2}
  if(state.powerSpawn<=0){spawnPower();state.powerSpawn=8+Math.random()*7}
@@ -74,7 +74,7 @@ function update(dt){
    const dx=Math.abs(ex-state.x),dy=Math.abs(e.y-.82);
    if(e.type==="coin" && state.magnet>0 && dy<.28){e.lane=nearestLane(state.x)}
    if(!e.hit && dy<.07 && dx<.105){
-     if(e.type==="coin"){e.hit=true;state.runCoins++;state.combo=Math.min(8,state.combo+1);state.bestCombo=Math.max(state.bestCombo,state.combo);state.score+=8*state.combo;}
+     if(e.type==="coin"){e.hit=true;state.runCoins+=1+tier;state.combo=Math.min(8,state.combo+1);state.bestCombo=Math.max(state.bestCombo,state.combo);state.score+=8*state.combo;}
      else if(["shield","magnet","slow"].includes(e.type)){e.hit=true;state[e.type]=6;}
      else if(state.shield>0){e.hit=true;state.shield=0;state.shake=1;state.combo=1;}
      else {finish();return;}
