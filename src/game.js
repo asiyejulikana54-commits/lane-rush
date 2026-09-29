@@ -1,4 +1,4 @@
-const VERSION = 11;
+const VERSION = 12;
 const $ = (id)=>document.getElementById(id);
 const screens=["home","gameScreen","result","panel"];
 const show=(id)=>{screens.forEach(s=>$(s).classList.toggle("active",s===id));};
@@ -47,7 +47,8 @@ function rewardAd(kind){return new Promise(resolve=>{const btn=kind==="revive"?$
 
 function spawnObstacle(){
  const lane=Math.floor(Math.random()*3),roll=Math.random();
- if(roll<.12 && state.score>400){state.entities.push({type:"barrier",lane,y:-.12,w:.2,h:.07,v:1.0});state.entities.push({type:"barrier",lane:(lane+1)%3,y:-.34,w:.2,h:.07,v:1.0});}
+ if(roll<.08 && state.score>700){const gap=Math.floor(Math.random()*3);[0,1,2].forEach((row)=>{const safe=(gap+row)%3;[0,1,2].forEach((l)=>{if(l!==safe)state.entities.push({type:"block",lane:l,y:-.12-row*.22,w:.18,h:.1,v:1})})})}
+ else if(roll<.12 && state.score>400){state.entities.push({type:"barrier",lane,y:-.12,w:.2,h:.07,v:1.0});state.entities.push({type:"barrier",lane:(lane+1)%3,y:-.34,w:.2,h:.07,v:1.0});}
  else if(roll<.28 && state.score>200){const gap=Math.floor(Math.random()*3);for(let l=0;l<3;l++)if(l!==gap)state.entities.push({type:"block",lane:l,y:-.12,w:.18,h:.1,v:1.0});}
  else state.entities.push({type:Math.random()<.35?"drone":"block",lane,y:-.12,w:.18,h:.1,v:1+Math.random()*.18,drift:Math.random()<.5?-1:1});
 }
