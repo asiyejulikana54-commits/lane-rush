@@ -1,9 +1,9 @@
-const VERSION = 17;
+const VERSION = 18;
 const $ = (id)=>document.getElementById(id);
 const screens=["home","gameScreen","result","panel"];
 const show=(id)=>{screens.forEach(s=>$(s).classList.toggle("active",s===id));};
 
-const DEFAULT={coins:0,best:0,seasonXp:0,selectedSkin:0,ownedSkins:[0],dailyLast:"",dailyStreak:0,chestMeter:0,missions:{runs:0,coins:0,near:0},claimed:{},games:0,chestsOpened:0};
+const DEFAULT={coins:0,best:0,seasonXp:0,selectedSkin:0,ownedSkins:[0],dailyLast:"",dailyStreak:0,chestMeter:0,missions:{runs:0,coins:0,near:0},claimed:{},games:0,chestsOpened:0,topRuns:[]};
 let profile=loadProfile();
 function loadProfile(){try{return {...DEFAULT,...JSON.parse(localStorage.getItem("laneRushProfile")||"{}")};}catch{return {...DEFAULT};}}
 function save(){localStorage.setItem("laneRushProfile",JSON.stringify(profile));refreshHome();}
@@ -41,8 +41,8 @@ const worlds=[
 function newState(){return {score:0,runCoins:0,combo:1,bestCombo:1,lane:1,x:lanes[1],targetX:lanes[1],speed:310,spawn:0,coinSpawn:.5,powerSpawn:6,entities:[],alive:true,revived:false,shield:0,magnet:0,slow:0,boost:0,world:0,near:0,lastNear:new Set(),time:0,shake:0};}
 function start(){state=newState();paused=false;show("gameScreen");last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);}
 function finish(){
- state.alive=false;cancelAnimationFrame(raf);profile.games++;profile.missions.runs++;profile.missions.coins+=state.runCoins;profile.missions.near+=state.near;profile.coins+=state.runCoins;profile.best=Math.max(profile.best,Math.floor(state.score));profile.seasonXp+=Math.min(80,10+Math.floor(state.score/250));profile.chestMeter+=state.runCoins;save();
- $("resultScore").textContent=Math.floor(state.score);$("resultCoins").textContent=state.runCoins;$("resultCombo").textContent=`x${state.bestCombo}`;$("resultTitle").textContent=state.score>=profile.best?"¡Carrera brutal!":"Carrera terminada";$("reviveBtn").disabled=state.revived;$("doubleBtn").disabled=false;show("result");
+ state.alive=false;cancelAnimationFrame(raf);profile.games++;profile.topRuns=[...(profile.topRuns||[]),Math.floor(state.score)].sort((a,b)=>b-a).slice(0,5);profile.missions.runs++;profile.missions.coins+=state.runCoins;profile.missions.near+=state.near;profile.coins+=state.runCoins;profile.best=Math.max(profile.best,Math.floor(state.score));profile.seasonXp+=Math.min(80,10+Math.floor(state.score/250));profile.chestMeter+=state.runCoins;save();
+ $("resultScore").textContent=Math.floor(state.score);const rank=(profile.topRuns||[]).indexOf(Math.floor(state.score))+1;$("resultTitle").textContent=rank>0&&rank<=3?`🏆 Top ${rank} personal`:"Carrera terminada";$("resultCoins").textContent=state.runCoins;$("resultCombo").textContent=`x${state.bestCombo}`;$("reviveBtn").disabled=state.revived;$("doubleBtn").disabled=false;show("result");
 }
 function rewardAd(kind){return new Promise(resolve=>{const btn=kind==="revive"?$("reviveBtn"):$("doubleBtn");const old=btn.textContent;btn.disabled=true;btn.textContent="Anuncio simulado…";setTimeout(()=>{btn.textContent=old;resolve(true)},900);});}
 
