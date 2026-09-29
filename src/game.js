@@ -1,4 +1,4 @@
-const VERSION = 13;
+const VERSION = 14;
 const $ = (id)=>document.getElementById(id);
 const screens=["home","gameScreen","result","panel"];
 const show=(id)=>{screens.forEach(s=>$(s).classList.toggle("active",s===id));};
@@ -37,7 +37,7 @@ const worlds=[
  {name:"Void Run",bg:["#140f26","#2b1742"],road:"#15121f"}
 ];
 
-function newState(){return {score:0,runCoins:0,combo:1,bestCombo:1,lane:1,x:lanes[1],targetX:lanes[1],speed:310,spawn:0,coinSpawn:.5,powerSpawn:6,entities:[],alive:true,revived:false,shield:0,magnet:0,slow:0,world:0,near:0,lastNear:new Set(),time:0,shake:0};}
+function newState(){return {score:0,runCoins:0,combo:1,bestCombo:1,lane:1,x:lanes[1],targetX:lanes[1],speed:310,spawn:0,coinSpawn:.5,powerSpawn:6,entities:[],alive:true,revived:false,shield:0,magnet:0,slow:0,boost:0,world:0,near:0,lastNear:new Set(),time:0,shake:0};}
 function start(){state=newState();paused=false;show("gameScreen");last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);}
 function finish(){
  state.alive=false;cancelAnimationFrame(raf);profile.games++;profile.missions.runs++;profile.missions.coins+=state.runCoins;profile.missions.near+=state.near;profile.coins+=state.runCoins;profile.best=Math.max(profile.best,Math.floor(state.score));profile.seasonXp+=Math.min(80,10+Math.floor(state.score/250));profile.chestMeter+=state.runCoins;save();
@@ -53,12 +53,12 @@ function spawnObstacle(){
  else state.entities.push({type:Math.random()<.35?"drone":"block",lane,y:-.12,w:.18,h:.1,v:1+Math.random()*.18,drift:Math.random()<.5?-1:1});
 }
 function spawnCoin(){const lane=Math.floor(Math.random()*3);for(let i=0;i<3;i++)state.entities.push({type:"coin",lane,y:-.08-i*.09,w:.06,h:.06,v:.92});}
-function spawnPower(){const types=["shield","magnet","slow"];state.entities.push({type:types[Math.floor(Math.random()*types.length)],lane:Math.floor(Math.random()*3),y:-.1,w:.08,h:.08,v:.9});}
+function spawnPower(){const types=["shield","magnet","slow","boost"];state.entities.push({type:types[Math.floor(Math.random()*types.length)],lane:Math.floor(Math.random()*3),y:-.1,w:.08,h:.08,v:.9});}
 
 function loop(t){if(!state?.alive)return;const dt=Math.min(.035,(t-last)/1000);last=t;if(!paused){update(dt);draw();}raf=requestAnimationFrame(loop);}
 function update(dt){
- state.time+=dt;state.score+=dt*state.speed*.11;state.speed=Math.min(650,310+state.score*.045);state.world=Math.min(worlds.length-1,Math.floor(state.score/900));
- state.shield=Math.max(0,state.shield-dt);state.magnet=Math.max(0,state.magnet-dt);state.slow=Math.max(0,state.slow-dt);state.shake=Math.max(0,state.shake-dt*4);
+ state.time+=dt;state.score+=dt*state.speed*.11*(state.boost>0?1.6:1);state.speed=Math.min(650,310+state.score*.045);state.world=Math.min(worlds.length-1,Math.floor(state.score/900));
+ state.shield=Math.max(0,state.shield-dt);state.magnet=Math.max(0,state.magnet-dt);state.slow=Math.max(0,state.slow-dt);state.boost=Math.max(0,state.boost-dt);state.shake=Math.max(0,state.shake-dt*4);
  state.x += (state.targetX-state.x)*Math.min(1,dt*16);
  state.spawn-=dt;state.coinSpawn-=dt;state.powerSpawn-=dt;
  const tier=state.score<500?0:state.score<1400?1:state.score<2800?2:3;const difficulty=Math.max(.46,1.0-state.score/5200);
@@ -75,7 +75,7 @@ function update(dt){
    if(e.type==="coin" && state.magnet>0 && dy<.28){e.lane=nearestLane(state.x)}
    if(!e.hit && dy<.07 && dx<.105){
      if(e.type==="coin"){e.hit=true;state.runCoins+=1+tier;state.combo=Math.min(8,state.combo+1);state.bestCombo=Math.max(state.bestCombo,state.combo);state.score+=8*state.combo;}
-     else if(["shield","magnet","slow"].includes(e.type)){e.hit=true;state[e.type]=6;}
+     else if(["shield","magnet","slow","boost"].includes(e.type)){e.hit=true;state[e.type]=6;}
      else if(state.shield>0){e.hit=true;state.shield=0;state.shake=1;state.combo=1;}
      else {finish();return;}
    } else if(!e.hit && ["block","barrier","drone"].includes(e.type) && dy<.09 && dx<.17 && dx>.105){nearNow=true;}
@@ -96,7 +96,7 @@ function draw(){
  ctx.restore();ctx.fillStyle="#ffffff88";ctx.font="700 12px sans-serif";ctx.fillText(`${world.name} · V${VERSION}`,14,h-14);
 }
 function rounded(c,x,y,w,h,r){c.beginPath();c.roundRect(x,y,w,h,r)}
-function renderPowerHud(){const p=[];if(state.shield>0)p.push(`🛡️ ${state.shield.toFixed(1)}`);if(state.magnet>0)p.push(`🧲 ${state.magnet.toFixed(1)}`);if(state.slow>0)p.push(`⏱️ ${state.slow.toFixed(1)}`);$("powerHud").innerHTML=p.map(x=>`<span class="power-pill">${x}</span>`).join("")}
+function renderPowerHud(){const p=[];if(state.shield>0)p.push(`🛡️ ${state.shield.toFixed(1)}`);if(state.magnet>0)p.push(`🧲 ${state.magnet.toFixed(1)}`);if(state.slow>0)p.push(`⏱️ ${state.slow.toFixed(1)}`);if(state.boost>0)p.push(`⚡ ${state.boost.toFixed(1)}`);$("powerHud").innerHTML=p.map(x=>`<span class="power-pill">${x}</span>`).join("")}
 
 function pulse(ms=18){if(navigator.vibrate)navigator.vibrate(ms)}
 function move(dir){if(!state?.alive||paused)return;const lane=nearestLane(state.targetX);const next=Math.max(0,Math.min(2,lane+dir));if(next!==lane){state.targetX=lanes[next];pulse(12)}}
