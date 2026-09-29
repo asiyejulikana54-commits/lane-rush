@@ -1,13 +1,14 @@
-const VERSION = 19;
+const VERSION = 20;
 const $ = (id)=>document.getElementById(id);
 const screens=["home","gameScreen","result","panel"];
 const show=(id)=>{screens.forEach(s=>$(s).classList.toggle("active",s===id));};
 
-const DEFAULT={coins:0,best:0,seasonXp:0,selectedSkin:0,ownedSkins:[0],dailyLast:"",dailyStreak:0,chestMeter:0,missions:{runs:0,coins:0,near:0},claimed:{},games:0,chestsOpened:0,topRuns:[]};
+const DEFAULT={coins:0,best:0,seasonXp:0,selectedSkin:0,ownedSkins:[0],dailyLast:"",dailyStreak:0,chestMeter:0,missions:{runs:0,coins:0,near:0},claimed:{},games:0,dailyChallengeLast:"",chestsOpened:0,topRuns:[]};
 let profile=loadProfile();
 function loadProfile(){try{return {...DEFAULT,...JSON.parse(localStorage.getItem("laneRushProfile")||"{}")};}catch{return {...DEFAULT};}}
 function save(){localStorage.setItem("laneRushProfile",JSON.stringify(profile));refreshHome();}
 function today(){return new Date().toISOString().slice(0,10)}
+function dailyTarget(){return 650+(new Date().getUTCDate()%5)*150}
 
 const skins=[
  {name:"Neón",price:0,color:"#7cffb2",icon:"◆"},{name:"Plasma",price:250,color:"#58e6ff",icon:"▲"},{name:"Furia",price:500,color:"#ff5d8f",icon:"⬢"},
@@ -21,8 +22,9 @@ function refreshHome(){
  $("homeCoins").textContent=profile.coins;
  $("homeBest").textContent=profile.best;
  $("homeSeason").textContent=Math.floor(profile.seasonXp/100)+1;
- const canDaily=profile.dailyLast!==today();
+ const canDaily=profile.dailyLast!==today();const challengeDone=profile.dailyChallengeLast===today();
  $("dailyCard").innerHTML=canDaily?`<b>🎁 Recompensa diaria disponible</b><p>Vuelve cada día para aumentar la racha.</p><button id="dailyBtn">Reclamar</button>`:`<b>✅ Recompensa diaria reclamada</b><p>Racha: ${profile.dailyStreak} día(s)</p>`;
+ $("dailyCard").innerHTML+=`<p>🎯 Reto diario: ${dailyTarget()} puntos · ${challengeDone?"✅ completado":"100 monedas"}</p>`;
  if(canDaily) $("dailyBtn").onclick=()=>{profile.dailyLast=today();profile.dailyStreak+=1;profile.coins+=50+Math.min(100,profile.dailyStreak*10);save();};
 }
 refreshHome();
@@ -41,7 +43,7 @@ const worlds=[
 function newState(){return {score:0,runCoins:0,combo:1,bestCombo:1,lane:1,x:lanes[1],targetX:lanes[1],speed:310,spawn:0,coinSpawn:.5,powerSpawn:6,entities:[],alive:true,revived:false,shield:0,magnet:0,slow:0,boost:0,world:0,near:0,lastNear:new Set(),time:0,shake:0};}
 function start(){state=newState();paused=false;show("gameScreen");last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);}
 function finish(){
- state.alive=false;cancelAnimationFrame(raf);profile.games++;profile.topRuns=[...(profile.topRuns||[]),Math.floor(state.score)].sort((a,b)=>b-a).slice(0,5);profile.missions.runs++;profile.missions.coins+=state.runCoins;profile.missions.near+=state.near;profile.coins+=state.runCoins;profile.best=Math.max(profile.best,Math.floor(state.score));profile.seasonXp+=Math.min(80,10+Math.floor(state.score/250));profile.chestMeter+=state.runCoins;save();
+ state.alive=false;cancelAnimationFrame(raf);if(state.score>=dailyTarget()&&profile.dailyChallengeLast!==today()){profile.dailyChallengeLast=today();profile.coins+=100;state.runCoins+=25}profile.games++;profile.topRuns=[...(profile.topRuns||[]),Math.floor(state.score)].sort((a,b)=>b-a).slice(0,5);profile.missions.runs++;profile.missions.coins+=state.runCoins;profile.missions.near+=state.near;profile.coins+=state.runCoins;profile.best=Math.max(profile.best,Math.floor(state.score));profile.seasonXp+=Math.min(80,10+Math.floor(state.score/250));profile.chestMeter+=state.runCoins;save();
  $("resultScore").textContent=Math.floor(state.score);const rank=(profile.topRuns||[]).indexOf(Math.floor(state.score))+1;$("resultTitle").textContent=rank>0&&rank<=3?`🏆 Top ${rank} personal`:"Carrera terminada";$("resultCoins").textContent=state.runCoins;$("resultCombo").textContent=`x${state.bestCombo}`;$("reviveBtn").disabled=state.revived;$("doubleBtn").disabled=false;show("result");
 }
 function rewardAd(kind){return new Promise(resolve=>{const btn=kind==="revive"?$("reviveBtn"):$("doubleBtn");const old=btn.textContent;btn.disabled=true;btn.textContent="Anuncio simulado…";setTimeout(()=>{btn.textContent=old;resolve(true)},900);});}
@@ -75,7 +77,7 @@ function update(dt){
    const dx=Math.abs(ex-state.x),dy=Math.abs(e.y-.82);
    if(e.type==="coin" && state.magnet>0 && dy<.28){e.lane=nearestLane(state.x)}
    if(!e.hit && dy<.07 && dx<.105){
-     if(e.type==="coin"){e.hit=true;state.runCoins+=1+tier;state.combo=Math.min(8,state.combo+1);state.bestCombo=Math.max(state.bestCombo,state.combo);state.score+=8*state.combo;}
+     if(e.type==="coin"){e.hit=true;state.runCoins+=1+tier;state.combo=Math.min(8,state.combo+1);state.bestCombo=Math.max(state.bestCombo,state.combo);state.score+=8*state.combo;if(state.combo===8)state.boost=Math.max(state.boost,2.5);}
      else if(["shield","magnet","slow","boost"].includes(e.type)){e.hit=true;state[e.type]=6;}
      else if(state.shield>0){e.hit=true;state.shield=0;state.shake=1;state.combo=1;}
      else {finish();return;}
