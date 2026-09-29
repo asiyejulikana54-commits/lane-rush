@@ -1,4 +1,4 @@
-const VERSION = 15;
+const VERSION = 16;
 const $ = (id)=>document.getElementById(id);
 const screens=["home","gameScreen","result","panel"];
 const show=(id)=>{screens.forEach(s=>$(s).classList.toggle("active",s===id));};
@@ -34,7 +34,8 @@ const worlds=[
  {name:"Neo City",bg:["#111936","#17265a"],road:"#171a28"},
  {name:"Sunset Grid",bg:["#35162b","#51283b"],road:"#241b28"},
  {name:"Ice Circuit",bg:["#102c3d","#17445b"],road:"#122a34"},
- {name:"Void Run",bg:["#140f26","#2b1742"],road:"#15121f"}
+ {name:"Void Run",bg:["#140f26","#2b1742"],road:"#15121f"},
+ {name:"Aurora Skyway",bg:["#062b2d","#214c62"],road:"#102b35"}
 ];
 
 function newState(){return {score:0,runCoins:0,combo:1,bestCombo:1,lane:1,x:lanes[1],targetX:lanes[1],speed:310,spawn:0,coinSpawn:.5,powerSpawn:6,entities:[],alive:true,revived:false,shield:0,magnet:0,slow:0,boost:0,world:0,near:0,lastNear:new Set(),time:0,shake:0};}
@@ -57,7 +58,7 @@ function spawnPower(){const types=["shield","magnet","slow","boost"];state.entit
 
 function loop(t){if(!state?.alive)return;const dt=Math.min(.035,(t-last)/1000);last=t;if(!paused){update(dt);draw();}raf=requestAnimationFrame(loop);}
 function update(dt){
- state.time+=dt;state.score+=dt*state.speed*.11*(state.boost>0?1.6:1);state.speed=Math.min(650,310+state.score*.045);state.world=Math.min(worlds.length-1,Math.floor(state.score/900));
+ state.time+=dt;state.score+=dt*state.speed*.11*(state.boost>0?1.6:1);state.speed=Math.min(650,310+state.score*.045);state.world=Math.min(worlds.length-1,Math.floor(state.score/800));
  state.shield=Math.max(0,state.shield-dt);state.magnet=Math.max(0,state.magnet-dt);state.slow=Math.max(0,state.slow-dt);state.boost=Math.max(0,state.boost-dt);state.shake=Math.max(0,state.shake-dt*4);
  state.x += (state.targetX-state.x)*Math.min(1,dt*16);
  state.spawn-=dt;state.coinSpawn-=dt;state.powerSpawn-=dt;
@@ -65,7 +66,7 @@ function update(dt){
  if(state.spawn<=0){spawnObstacle();state.spawn=difficulty*(.72+Math.random()*.38)}
  if(state.coinSpawn<=0){spawnCoin();state.coinSpawn=1.15+Math.random()*1.2}
  if(state.powerSpawn<=0){spawnPower();state.powerSpawn=8+Math.random()*7}
- const speedMul=(state.slow>0?.72:1)*state.speed/430;
+ const worldPulse=state.world===4?1.08:1;const speedMul=(state.slow>0?.72:1)*state.speed/430*worldPulse;
  let nearNow=false;
  for(const e of state.entities){
    if(e.type==="drone" && e.y>.12 && e.y<.38 && Math.random()<dt*.4){e.lane=Math.max(0,Math.min(2,e.lane+e.drift));}
