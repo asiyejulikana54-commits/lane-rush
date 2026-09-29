@@ -1,4 +1,4 @@
-const VERSION = 16;
+const VERSION = 17;
 const $ = (id)=>document.getElementById(id);
 const screens=["home","gameScreen","result","panel"];
 const show=(id)=>{screens.forEach(s=>$(s).classList.toggle("active",s===id));};
@@ -101,7 +101,7 @@ function renderPowerHud(){const p=[];if(state.shield>0)p.push(`🛡️ ${state.s
 
 function pulse(ms=18){if(navigator.vibrate)navigator.vibrate(ms)}
 function move(dir){if(!state?.alive||paused)return;const lane=nearestLane(state.targetX);const next=Math.max(0,Math.min(2,lane+dir));if(next!==lane){state.targetX=lanes[next];pulse(12)}}
-let touchX=0;canvas.addEventListener("pointerdown",e=>touchX=e.clientX);canvas.addEventListener("pointerup",e=>{const d=e.clientX-touchX;if(Math.abs(d)>28)move(d>0?1:-1);});window.addEventListener("keydown",e=>{if(e.key==="ArrowLeft")move(-1);if(e.key==="ArrowRight")move(1)});
+let touchX=0;canvas.addEventListener("pointerdown",e=>touchX=e.clientX);canvas.addEventListener("pointerup",e=>{const d=e.clientX-touchX;if(Math.abs(d)>22)move(d>0?1:-1);});canvas.addEventListener("pointercancel",()=>{touchX=0});window.addEventListener("keydown",e=>{if(e.key==="ArrowLeft")move(-1);if(e.key==="ArrowRight")move(1)});
 
 $("playBtn").onclick=start;$("retryBtn").onclick=start;$("homeBtn").onclick=()=>show("home");$("pauseBtn").onclick=()=>{paused=!paused;$("pauseBtn").textContent=paused?"▶":"Ⅱ"};
 $("reviveBtn").onclick=async()=>{if(state.revived)return;if(await rewardAd("revive")){state.revived=true;state.alive=true;state.shield=3;state.entities=state.entities.filter(e=>Math.abs(e.y-.82)>.2);show("gameScreen");last=performance.now();raf=requestAnimationFrame(loop)}};
