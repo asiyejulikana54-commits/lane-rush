@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#0f1226" />
+  <title>Lane Rush</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app">
+    <section id="home" class="screen active">
+      <div class="brand">LANE <span>RUSH</span></div>
+      <p class="subtitle">Esquiva. Encadena. Mejora.</p>
+      <div class="stats-row">
+        <div><b id="homeCoins">0</b><small>monedas</small></div>
+        <div><b id="homeBest">0</b><small>récord</small></div>
+        <div><b id="homeSeason">1</b><small>nivel pase</small></div>
+      </div>
+      <button id="playBtn" class="primary">JUGAR</button>
+      <div class="grid-actions">
+        <button data-panel="missions">Misiones</button>
+        <button data-panel="skins">Skins</button>
+        <button data-panel="chest">Cofre</button>
+        <button data-panel="season">Temporada</button>
+      </div>
+      <div id="dailyCard" class="card"></div>
+    </section>
+
+    <section id="gameScreen" class="screen">
+      <header class="hud">
+        <span>🏁 <b id="score">0</b></span>
+        <span>🪙 <b id="runCoins">0</b></span>
+        <span>🔥 <b id="combo">x1</b></span>
+      </header>
+      <canvas id="game" width="390" height="700" aria-label="Lane Rush"></canvas>
+      <div id="powerHud" class="power-hud"></div>
+      <button id="pauseBtn" class="icon-btn">Ⅱ</button>
+    </section>
+
+    <section id="result" class="screen modal-screen">
+      <div class="card result-card">
+        <h2 id="resultTitle">Carrera terminada</h2>
+        <p>Puntuación <b id="resultScore">0</b></p>
+        <p>Monedas <b id="resultCoins">0</b></p>
+        <p>Mejor combo <b id="resultCombo">x1</b></p>
+        <div class="result-actions">
+          <button id="reviveBtn" class="reward">▶ Revivir (anuncio)</button>
+          <button id="doubleBtn" class="reward">▶ x2 monedas (anuncio)</button>
+          <button id="retryBtn" class="primary">Reintentar</button>
+          <button id="homeBtn">Inicio</button>
+        </div>
+        <small class="ad-note">Los anuncios son opcionales y recompensados.</small>
+      </div>
+    </section>
+
+    <section id="panel" class="screen modal-screen">
+      <div class="card panel-card">
+        <button id="closePanel" class="close">×</button>
+        <div id="panelContent"></div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="src/game.js"></script>
+</body>
+</html>
