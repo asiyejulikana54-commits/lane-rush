@@ -1,4 +1,4 @@
-const VERSION = 18;
+const VERSION = 19;
 const $ = (id)=>document.getElementById(id);
 const screens=["home","gameScreen","result","panel"];
 const show=(id)=>{screens.forEach(s=>$(s).classList.toggle("active",s===id));};
@@ -58,14 +58,14 @@ function spawnPower(){const types=["shield","magnet","slow","boost"];state.entit
 
 function loop(t){if(!state?.alive)return;const dt=Math.min(.035,(t-last)/1000);last=t;if(!paused){update(dt);draw();}raf=requestAnimationFrame(loop);}
 function update(dt){
- state.time+=dt;state.score+=dt*state.speed*.11*(state.boost>0?1.6:1);state.speed=Math.min(650,310+state.score*.045);state.world=Math.min(worlds.length-1,Math.floor(state.score/800));
+ state.time+=dt;state.score+=dt*state.speed*.11*(state.boost>0?1.6:1);state.speed=Math.min(620,305+state.score*.041);state.world=Math.min(worlds.length-1,Math.floor(state.score/800));
  state.shield=Math.max(0,state.shield-dt);state.magnet=Math.max(0,state.magnet-dt);state.slow=Math.max(0,state.slow-dt);state.boost=Math.max(0,state.boost-dt);state.shake=Math.max(0,state.shake-dt*4);
  state.x += (state.targetX-state.x)*Math.min(1,dt*16);
  state.spawn-=dt;state.coinSpawn-=dt;state.powerSpawn-=dt;
  const tier=state.score<500?0:state.score<1400?1:state.score<2800?2:3;const difficulty=Math.max(.46,1.0-state.score/5200);
  if(state.spawn<=0){spawnObstacle();state.spawn=difficulty*(.72+Math.random()*.38)}
  if(state.coinSpawn<=0){spawnCoin();state.coinSpawn=1.15+Math.random()*1.2}
- if(state.powerSpawn<=0){spawnPower();state.powerSpawn=8+Math.random()*7}
+ if(state.powerSpawn<=0){spawnPower();state.powerSpawn=9+Math.random()*6}
  const worldPulse=state.world===4?1.08:1;const speedMul=(state.slow>0?.72:1)*state.speed/430*worldPulse;
  let nearNow=false;
  for(const e of state.entities){
@@ -82,7 +82,7 @@ function update(dt){
    } else if(!e.hit && ["block","barrier","drone"].includes(e.type) && dy<.09 && dx<.17 && dx>.105){nearNow=true;}
  }
  if(nearNow){const key=Math.floor(state.time*4);if(!state.lastNear.has(key)){state.lastNear.add(key);state.near++;state.combo=Math.min(8,state.combo+1);state.bestCombo=Math.max(state.bestCombo,state.combo);state.score+=4*state.combo;pulse(8)}if(state.lastNear.size>12)state.lastNear.delete(Math.min(...state.lastNear));}
- state.entities=state.entities.filter(e=>e.y<1.15&&!e.hit);
+ state.entities=state.entities.filter(e=>e.y<1.15&&!e.hit).slice(-55);
  $("score").textContent=Math.floor(state.score);$("runCoins").textContent=state.runCoins;$("combo").textContent=`x${state.combo}`;renderPowerHud();
 }
 function nearestLane(x){let bi=0,bd=9;lanes.forEach((v,i)=>{const d=Math.abs(v-x);if(d<bd){bd=d;bi=i}});return bi;}
